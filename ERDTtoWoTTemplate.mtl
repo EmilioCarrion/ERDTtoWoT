@@ -1,0 +1,70 @@
+[comment encoding = UTF-8 /]
+[module generateWoT('http://www.eclipse.org/sirius/sample/ERDTModel')]
+
+
+[template public generateWoT(digitalTwin : DigitalTwin)]
+[comment @main/]
+
+[for (entitySet : EntitySet | digitalTwin.entitysets )]
+[file (entitySet.name, false, 'UTF-8')]
+
+{
+  "@context": ['['/]
+    "https://www.w3.org/2022/wot/td/v1.1"
+  ],
+  "@type": "tm:ThingModel",
+  "title": "[ entitySet.name /]",
+  "description": "[ entitySet.name /] entity",
+  "version": {
+    "model": "1.0.0"
+  },
+  "properties": {
+	[for (attribute : Attribute | entitySet.has_attribute)]
+	"[ attribute.name /]": {
+      "title": "[ attribute.name /]",
+      "description": "[ attribute.name /] property",
+      "type": "string",
+      "readable": true,
+      "observable": true,
+      "forms": ['['/] 
+        {
+          "op": ['['/] 
+            "readproperty"
+          ],
+          "href": "http://example.org/things/properties/[ attribute.name /]",
+          "contentType": "application/json"
+        }
+      ]
+    }[if attribute <> entitySet.has_attribute->last()],[/if]
+	[/for]
+  },
+  "actions": {
+	[for (interface : Interface | entitySet.has_interface)]
+	"[ interface.name /]": {
+      "title": "[ interface.name /]",
+      "description": "Action [ interface.name /]",
+      "forms": ['['/] 
+        {
+          "op": "invokeaction",
+          "href": "http://example.org/things/actions/[ interface.name /]",
+          "contentType": "application/json"
+        }
+      ],
+      "output": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        }
+      }
+    }[if interface <> entitySet.has_interface->last()],[/if]
+	[/for]
+  },
+  "events": {}
+}
+
+[/file]
+[/for]
+
+[/template]
