@@ -1,0 +1,15 @@
+get_active_trucks:
+  entity: Truck
+  permissions: 
+   - Truck::is_active
+  parameters: []
+  query: entity.is_active() 
+
+get_trucks_by_brand:
+  entity: Truck
+  permissions: 
+    - Truck::get_brand
+  parameters: 
+    - name: brand
+      type: str
+  query: entity.get_brand() == brand

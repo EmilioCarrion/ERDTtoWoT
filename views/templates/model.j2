@@ -1,0 +1,26 @@
+from dataclasses import dataclass
+
+
+{% for entity in entities %}
+@dataclass
+class {{ entity }}:
+    thing_id: str
+    """
+    Add any additional attributes here.
+    """
+
+    @classmethod
+    def from_ditto(cls, ditto_entity) -> "{{ entity }}":
+        return cls(
+            thing_id=ditto_entity["thingId"],
+            # Add any additional attributes here.
+        )
+
+    {% for interface in interfaces[entity] %}
+    def {{ interface }}(self):
+        """
+        Implement this method to handle the {{ interface }} interface.
+        """
+        ...
+    {% endfor %}
+{% endfor %}

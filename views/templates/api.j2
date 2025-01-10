@@ -1,0 +1,24 @@
+from dataclasses import dataclass
+from fastapi import FastAPI, Request, HTTPException
+{% for name in views.keys() %}
+from application import {{ name }}
+{% endfor %}
+{% for entity in entities %}
+from model import {{ entity }}
+{% endfor %}
+
+from security import has_permission
+
+app = FastAPI()
+
+{% for name, view in views.items() %}
+@app.get("/{{ name }}")
+async def {{ name }}_view(request: Request, {{ view.get_parameters() }}) -> list[{{ view.entity }}]:
+    {% for permission in view.permissions %}
+    if not has_permission(request.client.host, "{{ permission }}"):
+        raise HTTPException(status_code=403, detail="Permission denied")
+    {% endfor %}
+
+    entities = {{ name }}({{ view.get_parameter_names() }})
+    return entities
+{% endfor %}

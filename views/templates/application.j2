@@ -1,0 +1,16 @@
+from ditto import DittoClient
+{% for entity in entities %}
+from model import {{ entity }}
+{% endfor %}
+
+ditto_client = DittoClient()
+
+{% for name, view in views.items() %}
+def {{ name }}({{ view.get_parameters() }}) -> list[{{ view.entity }}]:
+    entities = ditto_client.query({{ view.entity }})
+    matching_entities = []
+    for entity in entities:
+        if {{ view.query }}:
+            matching_entities.append(entity)
+    return matching_entities
+{% endfor %}
