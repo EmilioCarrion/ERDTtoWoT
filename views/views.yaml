@@ -13,3 +13,12 @@ get_trucks_by_brand:
     - name: brand
       type: str
   query: entity.get_brand() == brand
+
+get_trucks_inside_zone:
+  entity: Truck
+  permissions: 
+    - Truck::get_location
+  parameters: 
+    - name: zone
+      type: Polygon
+  query: zone.contains(entity.get_location())

@@ -6,6 +6,9 @@ from application import {{ name }}
 {% for entity in entities %}
 from model import {{ entity }}
 {% endfor %}
+{% for value_set in value_sets %}
+from model import {{ value_set }}
+{% endfor %}
 
 from security import has_permission
 

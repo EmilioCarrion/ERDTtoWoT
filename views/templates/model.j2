@@ -1,5 +1,17 @@
 from dataclasses import dataclass
 
+### Value Sets
+
+{% for value_set in value_sets %}
+@dataclass
+class {{ value_set }}:
+    """
+    Add attributes here.
+    """
+    pass
+{% endfor %}
+
+### Entities
 
 {% for entity in entities %}
 @dataclass

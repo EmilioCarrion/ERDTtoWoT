@@ -2,6 +2,9 @@ from ditto import DittoClient
 {% for entity in entities %}
 from model import {{ entity }}
 {% endfor %}
+{% for value_set in value_sets %}
+from model import {{ value_set }}
+{% endfor %}
 
 ditto_client = DittoClient()
 

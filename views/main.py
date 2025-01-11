@@ -41,28 +41,38 @@ if __name__ == "__main__":
                         interface = permission.split("::")[1]
                         interfaces[entity].append(interface)
 
+    value_sets = set()
+    for view in views.values():
+        for parameter in view.parameters:
+            if parameter.type not in ["str", "int", "float", "bool"]:
+                value_sets.add(parameter.type)
+
     env = Environment(loader=PackageLoader("main"), autoescape=select_autoescape())
 
     model = env.get_template("model.j2")
-    model_result = model.render(views=views, entities=entities, interfaces=interfaces)
+    model_result = model.render(
+        views=views, entities=entities, interfaces=interfaces, value_sets=value_sets
+    )
 
-    ditto = env.get_template("ditto.j2")
-    ditto_result = ditto.render()
+    client = env.get_template("client.j2")
+    client_result = client.render()
 
     application = env.get_template("application.j2")
-    application_result = application.render(views=views, entities=entities)
+    application_result = application.render(
+        views=views, entities=entities, value_sets=value_sets
+    )
 
     security = env.get_template("security.j2")
     security_result = security.render()
 
     api = env.get_template("api.j2")
-    api_result = api.render(views=views, entities=entities)
+    api_result = api.render(views=views, entities=entities, value_sets=value_sets)
 
     with open("output/model.py", "w") as f:
         f.write(model_result)
 
-    with open("output/ditto.py", "w") as f:
-        f.write(ditto_result)
+    with open("output/client.py", "w") as f:
+        f.write(client_result)
 
     with open("output/application.py", "w") as f:
         f.write(application_result)
