@@ -3,30 +3,22 @@ from dataclasses import dataclass
 ### Value Sets
 
 
-@dataclass
-class Polygon:
-    """
-    Add attributes here.
-    """
-
-    pass
-
-
-@dataclass
-class Location:
-    latitude: float
-    longitude: float
-
-    pass
-
-
 ### Entities
 
 
 @dataclass
 class Truck:
     thing_id: str
-    location: Location
+    brand: str
+    serial_number: str
 
-    def get_location(self):
-        return self.location
+    @classmethod
+    def from_ditto(cls, ditto_entity) -> "Truck":
+        return cls(
+            thing_id=ditto_entity["thingId"],
+            brand=ditto_entity["attributes"]["brand"],
+            serial_number=ditto_entity["attributes"]["serialno"],
+        )
+
+    def get_brand(self):
+        return self.brand
