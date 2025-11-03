@@ -5,6 +5,7 @@ from model import {{ entity }}
 {% for value_set in value_sets %}
 from model import {{ value_set }}
 {% endfor %}
+from model import Coordinate, Polygon, String
 
 ditto_client = DittoClient()
 
@@ -13,7 +14,7 @@ def {{ name }}({{ view.get_parameters() }}) -> list[{{ view.entity }}]:
     entities = ditto_client.query({{ view.entity }})
     matching_entities = []
     for entity in entities:
-        if {{ view.query }}:
+        if {{ view.query.replace(view.entity, "entity") }}:
             matching_entities.append(entity)
     return matching_entities
 {% endfor %}

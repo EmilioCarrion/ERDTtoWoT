@@ -9,13 +9,14 @@ from model import {{ entity }}
 {% for value_set in value_sets %}
 from model import {{ value_set }}
 {% endfor %}
+from model import Coordinate, Polygon, String
 
 from security import has_permission
 
 app = FastAPI()
 
 {% for name, view in views.items() %}
-@app.get("/{{ name }}")
+@app.post("/{{ name }}")
 async def {{ name }}_view(request: Request, {{ view.get_parameters() }}) -> list[{{ view.entity }}]:
     {% for permission in view.permissions %}
     if not has_permission(request.client.host, "{{ permission }}"):
