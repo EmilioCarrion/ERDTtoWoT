@@ -1,8 +1,28 @@
-get_trucks_by_brand:
+get_all_trucks_inside_zone:
   entity: Truck
-  permissions: 
-    - Truck::get_brand
-  parameters: 
-    - name: brand
-      type: str
-  query: entity.get_brand() == brand
+  permissions:
+    - Truck::Get Location
+  parameters:
+    - name: zone
+      type: Polygon
+  query: Truck.get_location().within(zone)
+
+
+get_all_trucks_near_place:
+  entity: Truck
+  permissions:
+    - Truck::Get Location
+  parameters:
+    - name: place
+      type: Coordinate
+  query: Truck.get_location().withinDistance(200, place)
+
+get_all_trucks_with_license_plate_ending:
+  entity: Truck
+  permissions:
+    - Truck::Get License Plate
+  parameters:
+    - name: ending
+      type: String
+  query: Truck.get_license_plate().endsWith(ending)
+

@@ -1,0 +1,7 @@
+POST http://localhost:8000/get_all_trucks_near_place
+Content-Type: application/json
+
+{
+    "latitude": 40.7128,
+    "longitude": -74.0060
+}

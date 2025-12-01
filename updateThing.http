@@ -1,0 +1,11 @@
+@user = ditto
+@password = 12345678
+@thingId = org.eclipse.ditto:a0e30dd8-0a1a-413b-bdd0-079e5a7e8e05
+PUT http://localhost:8080/api/2/things/{{thingId}}/attributes/Location
+Authorization: Basic {{user}}:{{password}}
+Content-Type: application/json
+
+{
+    "latitude": 40.7128,
+    "longitude": -74.0060
+}

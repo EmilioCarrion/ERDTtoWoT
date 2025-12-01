@@ -1,0 +1,5 @@
+@user = ditto
+@password = 12345678
+
+GET http://localhost:8080/api/2/things
+Authorization: Basic {{user}}:{{password}}

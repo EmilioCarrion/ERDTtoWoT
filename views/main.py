@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import yaml
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -11,7 +11,7 @@ class Parameter(BaseModel):
 class View(BaseModel):
     entity: str
     permissions: list[str]
-    parameters: list[Parameter]
+    parameters: list[Parameter] = Field(default_factory=list)
     query: str
 
     def get_parameters(self):
@@ -39,12 +39,21 @@ if __name__ == "__main__":
                 for permission in view.permissions:
                     if permission.startswith(f"{entity}::"):
                         interface = permission.split("::")[1]
-                        interfaces[entity].append(interface)
+                        if interface not in interfaces[entity]:
+                            interfaces[entity].append(interface)
 
     value_sets = set()
     for view in views.values():
         for parameter in view.parameters:
-            if parameter.type not in ["str", "int", "float", "bool"]:
+            if parameter.type not in [
+                "str",
+                "int",
+                "float",
+                "bool",
+                "String",
+                "Coordinate",
+                "Polygon",
+            ]:
                 value_sets.add(parameter.type)
 
     env = Environment(loader=PackageLoader("main"), autoescape=select_autoescape())
