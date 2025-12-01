@@ -1,0 +1,130 @@
+{
+  "@context": [
+    "https://www.w3.org/2019/wot/td/v1",
+    {
+      "erdt": "https://erdt.example.org/",
+      "iot": "http://iotschema.org/"
+    }
+  ],
+  "id": "urn:uuid:picker",
+  "title": "Picker",
+  "description": "Worker who prepares orders in the warehouse",
+  "@type": "Thing",
+  "security": [
+    "basic_sc"
+  ],
+  "securityDefinitions": {
+    "basic_sc": {
+      "scheme": "basic",
+      "in": "header"
+    },
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Picker/properties/id",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "Worker name",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Picker/properties/name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "indoor_location": {
+      "type": "object",
+      "description": "Position within warehouse over time (time-series data)",
+      "observable": true,
+      "readOnly": false,
+      "forms": [
+        {
+          "href": "https://example.com/things/Picker/properties/indoor_location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty",
+            "writeproperty"
+          ]
+        }
+      ]
+    }
+  },
+  "actions": {
+    "set_location": {
+      "description": "Updates the indoor location of the picker",
+      "input": {
+        "type": "object",
+        "properties": {
+          "indoor_location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "indoor_location"
+        ]
+      },
+      "security": [
+        "Requires telemetry system authentication"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/Picker/actions/set_location",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    },
+    "trigger_picker_telemetry": {
+      "description": "Updates picker's indoor location from telemetry system",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Indoor positioning system worn by picker",
+      "forms": [
+        {
+          "href": "https://example.com/things/Picker/actions/trigger_picker_telemetry",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    }
+  },
+  "events": {},
+  "links": [
+    {
+      "rel": "works_in",
+      "href": "https://example.com/things/Hive",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Picker works in a specific hive"
+    }
+  ],
+  "erdt:modelGoal": "Locate workers, alert on LEZ violations, and analyze daily routes"
+}

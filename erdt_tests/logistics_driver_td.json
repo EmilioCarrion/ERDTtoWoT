@@ -1,0 +1,88 @@
+{
+  "@context": [
+    "https://www.w3.org/2019/wot/td/v1",
+    {
+      "erdt": "https://erdt.example.org/",
+      "iot": "http://iotschema.org/"
+    }
+  ],
+  "id": "urn:uuid:driver",
+  "title": "Driver",
+  "description": "Person who drives the truck and delivers orders",
+  "@type": "Thing",
+  "security": [
+    "basic_sc"
+  ],
+  "securityDefinitions": {
+    "basic_sc": {
+      "scheme": "basic",
+      "in": "header"
+    },
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "properties": {
+    "driver_license": {
+      "type": "string",
+      "description": "Driver's license number",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Driver/properties/driver_license",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "Driver name",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Driver/properties/name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      },
+      "description": "Current location derived from driven truck [Computed: Location of the truck currently driven by this driver]",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Driver/properties/location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    }
+  },
+  "actions": {},
+  "events": {},
+  "links": [
+    {
+      "rel": "driven_by",
+      "href": "https://example.com/things/Truck",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Truck is driven by a specific driver"
+    }
+  ],
+  "erdt:modelGoal": "Locate workers, alert on LEZ violations, and analyze daily routes"
+}

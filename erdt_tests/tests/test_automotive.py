@@ -4,7 +4,6 @@ Tests for automotive digital twin model.
 
 import pytest
 from ..transformation.erdt_to_wot import transform_erdt_to_wot
-from ..validation.wot_validator import validate_wot_thing_description
 
 
 class TestAutomotiveModel:
@@ -34,5 +33,9 @@ class TestAutomotiveModel:
         assert has_safety
     
     def test_wot_transformation(self, automotive_model):
-        wot_td = transform_erdt_to_wot(automotive_model)
-        assert "@context" in wot_td
+        wot_tds = transform_erdt_to_wot(automotive_model)
+        assert isinstance(wot_tds, dict)
+        
+        for entity_name, wot_td in wot_tds.items():
+            assert "@context" in wot_td
+            assert "title" in wot_td

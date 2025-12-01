@@ -1,0 +1,205 @@
+{
+  "@context": [
+    "https://www.w3.org/2019/wot/td/v1",
+    {
+      "erdt": "https://erdt.example.org/",
+      "iot": "http://iotschema.org/"
+    }
+  ],
+  "id": "urn:uuid:truck",
+  "title": "Truck",
+  "description": "Vehicle that delivers orders",
+  "@type": "Thing",
+  "security": [
+    "basic_sc"
+  ],
+  "securityDefinitions": {
+    "basic_sc": {
+      "scheme": "basic",
+      "in": "header"
+    },
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "properties": {
+    "license_plate": {
+      "type": "string",
+      "description": "Vehicle registration",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/properties/license_plate",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      },
+      "description": "GPS coordinates over time (time-series data)",
+      "observable": true,
+      "readOnly": false,
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/properties/location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty",
+            "writeproperty"
+          ]
+        }
+      ]
+    }
+  },
+  "actions": {
+    "set_location": {
+      "description": "Updates the GPS location of the truck",
+      "input": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      },
+      "security": [
+        "Requires GPS system authentication"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/actions/set_location",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    },
+    "assign_driver": {
+      "description": "Assigns a driver to this truck",
+      "input": {
+        "type": "object",
+        "properties": {
+          "driver": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "driver"
+        ]
+      },
+      "security": [
+        "Requires fleet management authorization"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/actions/assign_driver",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    },
+    "trigger_driver_assigned": {
+      "description": "Assigns driver to truck when shift starts",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Fleet management system",
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/actions/trigger_driver_assigned",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    },
+    "trigger_truck_gps_coordinates": {
+      "description": "Periodically fetches truck GPS coordinates",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Truck GPS device",
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/actions/trigger_truck_gps_coordinates",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
+    }
+  },
+  "events": {
+    "truck_entered_lez": {
+      "description": "Alerts operations team when truck enters restricted low-emission zone (Triggered when: Truck location enters predefined LEZ boundary)",
+      "target": "Operations management dashboard",
+      "data": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "forms": [
+        {
+          "href": "https://example.com/things/Truck/events/truck_entered_lez",
+          "contentType": "application/json",
+          "subprotocol": "sse",
+          "op": "subscribeevent"
+        }
+      ]
+    }
+  },
+  "links": [
+    {
+      "rel": "delivers_from",
+      "href": "https://example.com/things/Hive",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Truck delivers orders from a specific hive"
+    },
+    {
+      "rel": "driven_by",
+      "href": "https://example.com/things/Driver",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Truck is driven by a specific driver"
+    }
+  ],
+  "erdt:modelGoal": "Locate workers, alert on LEZ violations, and analyze daily routes"
+}

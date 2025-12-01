@@ -4,7 +4,6 @@ Tests for smart city digital twin model.
 
 import pytest
 from ..transformation.erdt_to_wot import transform_erdt_to_wot
-from ..validation.wot_validator import validate_wot_thing_description
 
 
 class TestSmartCityModel:
@@ -38,5 +37,9 @@ class TestSmartCityModel:
         assert has_energy_event
     
     def test_wot_transformation(self, smart_city_model):
-        wot_td = transform_erdt_to_wot(smart_city_model)
-        assert "@context" in wot_td
+        wot_tds = transform_erdt_to_wot(smart_city_model)
+        assert isinstance(wot_tds, dict)
+        
+        for entity_name, wot_td in wot_tds.items():
+            assert "@context" in wot_td
+            assert "title" in wot_td

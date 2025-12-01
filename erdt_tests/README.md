@@ -96,14 +96,24 @@ print(logistics_dt.summary())
 from erdt_tests.transformation.erdt_to_wot import transform_erdt_to_wot
 from erdt_tests.validation.wot_validator import validate_wot_thing_description
 
-# Transform ERDT to WoT Thing Description
-wot_td = transform_erdt_to_wot(logistics_dt)
+# Transform ERDT to WoT Thing Descriptions
+# Returns a DICT with one TD per entity
+wot_tds = transform_erdt_to_wot(logistics_dt)
 
-# Validate WoT TD
-is_valid, messages = validate_wot_thing_description(wot_td)
-print(f"Valid: {is_valid}")
-for msg in messages:
-    print(f"  {msg}")
+# wot_tds = {
+#   "Hive": {...WoT TD for Hive...},
+#   "Picker": {...WoT TD for Picker...},
+#   "Truck": {...WoT TD for Truck...},
+#   "Driver": {...WoT TD for Driver...}
+# }
+
+# Validate each entity's WoT TD
+for entity_name, wot_td in wot_tds.items():
+    is_valid, messages = validate_wot_thing_description(wot_td)
+    print(f"{entity_name}: Valid={is_valid}")
+    if messages:
+        for msg in messages:
+            print(f"  {msg}")
 ```
 
 ## Running Tests
@@ -212,18 +222,32 @@ Precision farming with fields, crops, irrigation, and weather.
 
 ## ERDT to WoT Transformation
 
-The transformation maps ERDT concepts to WoT Thing Description elements:
+**IMPORTANT**: The transformation creates **ONE Thing Description per ERDT Entity**.
+
+Each entity becomes an independent WoT Thing with its own properties, actions, and events.
 
 | ERDT Concept | WoT Mapping |
 |--------------|-------------|
-| Entity + Attributes | Properties |
+| **Entity** | **WoT Thing** (one TD per entity) |
+| Attributes | Properties (of that entity's TD) |
 | Historical Attributes | Properties (observable: true) |
 | Derived Attributes | Properties (readOnly: true) |
 | Interfaces (Query) | Properties (readable) |
-| Interfaces (Update/Analytical) | Actions |
-| Incoming Events | Actions (invokable) |
-| Outgoing Events | Events |
-| Relationships | Metadata (erdt:relationships) |
+| Interfaces (Update/Analytical) | Actions (of the entity's TD) |
+| Incoming Events | Actions (invokable, for target entity) |
+| Outgoing Events | Events (of the source entity's TD) |
+| Relationships | Links between TDs |
+
+### Example
+
+For the logistics model with 4 entities (Hive, Picker, Truck, Driver), the transformation generates:
+
+- `Hive` Thing Description
+- `Picker` Thing Description  
+- `Truck` Thing Description
+- `Driver` Thing Description
+
+Each TD is independent and can be deployed/discovered separately.
 
 ## Project Structure
 

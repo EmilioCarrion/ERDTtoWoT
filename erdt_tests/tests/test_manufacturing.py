@@ -42,7 +42,12 @@ class TestManufacturingModel:
         assert failure_prob.attribute_type == AttributeType.DERIVED
     
     def test_wot_transformation(self, manufacturing_model):
-        wot_td = transform_erdt_to_wot(manufacturing_model)
-        is_valid, messages = validate_wot_thing_description(wot_td)
-        assert "@context" in wot_td
-        assert "title" in wot_td
+        wot_tds = transform_erdt_to_wot(manufacturing_model)
+        assert isinstance(wot_tds, dict)
+        assert len(wot_tds) >= 4  # ProductionLine, Machine, Sensor, Product
+        
+        # Each TD should have required fields
+        for entity_name, wot_td in wot_tds.items():
+            assert "@context" in wot_td
+            assert "title" in wot_td
+

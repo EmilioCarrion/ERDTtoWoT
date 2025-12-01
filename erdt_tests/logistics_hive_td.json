@@ -1,0 +1,72 @@
+{
+  "@context": [
+    "https://www.w3.org/2019/wot/td/v1",
+    {
+      "erdt": "https://erdt.example.org/",
+      "iot": "http://iotschema.org/"
+    }
+  ],
+  "id": "urn:uuid:hive",
+  "title": "Hive",
+  "description": "Warehouse facility where orders are prepared",
+  "@type": "Thing",
+  "security": [
+    "basic_sc"
+  ],
+  "securityDefinitions": {
+    "basic_sc": {
+      "scheme": "basic",
+      "in": "header"
+    },
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the warehouse",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Hive/properties/name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    },
+    "blueprint": {
+      "type": "object",
+      "description": "Visual layout of the warehouse",
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/Hive/properties/blueprint",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
+    }
+  },
+  "actions": {},
+  "events": {},
+  "links": [
+    {
+      "rel": "works_in",
+      "href": "https://example.com/things/Picker",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Picker works in a specific hive"
+    },
+    {
+      "rel": "delivers_from",
+      "href": "https://example.com/things/Truck",
+      "type": "application/td+json",
+      "erdt:relationshipDescription": "Truck delivers orders from a specific hive"
+    }
+  ],
+  "erdt:modelGoal": "Locate workers, alert on LEZ violations, and analyze daily routes"
+}

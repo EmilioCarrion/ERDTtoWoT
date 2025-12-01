@@ -2,6 +2,7 @@
 ERDT to WoT Thing Description transformation.
 
 This module transforms ERDT models to WoT Thing Descriptions following the W3C WoT specification.
+Each ERDT Entity becomes a separate WoT Thing.
 """
 
 from typing import Dict, Any, List
@@ -90,9 +91,8 @@ def _create_property_from_attribute(
         property_def["readOnly"] = property_def.get("readOnly", True)
     
     # Add required forms field with HTTP binding
-    property_name = f"{entity_name}_{attribute.name}"
     property_def["forms"] = [{
-        "href": f"https://example.com/things/dt/{property_name}",
+        "href": f"https://example.com/things/{entity_name}/properties/{attribute.name}",
         "contentType": "application/json",
         "op": ["readproperty", "writeproperty"] if not property_def.get("readOnly", True) else ["readproperty"]
     }]
@@ -100,11 +100,12 @@ def _create_property_from_attribute(
     return property_def
 
 
-def _create_action_from_interface(interface: Interface) -> Dict[str, Any]:
+def _create_action_from_interface(entity_name: str, interface: Interface) -> Dict[str, Any]:
     """
     Create a WoT action from an ERDT interface.
     
     Args:
+        entity_name: Name of the entity
         interface: The ERDT interface
         
     Returns:
@@ -139,7 +140,7 @@ def _create_action_from_interface(interface: Interface) -> Dict[str, Any]:
     
     # Add required forms field
     action_def["forms"] = [{
-        "href": f"https://example.com/things/dt/actions/{interface.name}",
+        "href": f"https://example.com/things/{entity_name}/actions/{interface.name}",
         "contentType": "application/json",
         "op": "invokeaction"
     }]
@@ -147,11 +148,12 @@ def _create_action_from_interface(interface: Interface) -> Dict[str, Any]:
     return action_def
 
 
-def _create_event_from_outgoing_event(outgoing_event: OutgoingEvent) -> Dict[str, Any]:
+def _create_event_from_outgoing_event(entity_name: str, outgoing_event: OutgoingEvent) -> Dict[str, Any]:
     """
     Create a WoT event from an ERDT outgoing event.
     
     Args:
+        entity_name: Name of the entity
         outgoing_event: The ERDT outgoing event
         
     Returns:
@@ -182,7 +184,7 @@ def _create_event_from_outgoing_event(outgoing_event: OutgoingEvent) -> Dict[str
     
     # Add required forms field with SSE (Server-Sent Events) binding
     event_def["forms"] = [{
-        "href": f"https://example.com/things/dt/events/{outgoing_event.name}",
+        "href": f"https://example.com/things/{entity_name}/events/{outgoing_event.name}",
         "contentType": "application/json",
         "subprotocol": "sse",
         "op": "subscribeevent"
@@ -191,117 +193,137 @@ def _create_event_from_outgoing_event(outgoing_event: OutgoingEvent) -> Dict[str
     return event_def
 
 
-def transform_erdt_to_wot(erdt_model: ERDTModel) -> Dict[str, Any]:
+def transform_erdt_to_wot(erdt_model: ERDTModel) -> Dict[str, Dict[str, Any]]:
     """
-    - ERDT Interfaces (Query) -> WoT Properties (readable)
-    - ERDT Interfaces (Update/Analytical) -> WoT Actions
-    - ERDT Incoming Events -> WoT Actions (invokable to trigger updates)
-    - ERDT Outgoing Events -> WoT Events
+    Transform an ERDT model to WoT Thing Descriptions.
+    
+    **IMPORTANT**: This creates ONE Thing Description per ERDT Entity.
+    Each entity becomes an independent WoT Thing with its own properties, actions, and events.
+    
+    Mapping:
+    - ERDT Entity → WoT Thing (one TD per entity)
+    - ERDT Attributes → WoT Properties (of that entity's TD)
+    - ERDT Interfaces → WoT Actions (of the entity's TD)
+    - ERDT Incoming Events → WoT Actions (for the target entity)
+    - ERDT Outgoing Events → WoT Events (for the source entity)
+    - ERDT Relationships → Links between TDs
     
     Args:
         erdt_model: The ERDT model to transform
         
     Returns:
-        A dictionary representing a WoT Thing Description
+        A dictionary mapping entity names to their WoT Thing Descriptions
+        Format: {"EntityName": {...WoT TD...}, ...}
     """
     
-    # Initialize WoT Thing Description
-    wot_td = {
-        "@context": [
-            "https://www.w3.org/2019/wot/td/v1",
-            {
-                "erdt": "https://erdt.example.org/",
-                "iot": "http://iotschema.org/"
-            }
-        ],
-        "title": erdt_model.name,
-        "description": erdt_model.description or f"Digital Twin: {erdt_model.name}",
-        "@type": "Thing",
-        "security": ["basic_sc"],
-        "securityDefinitions": {
-            "basic_sc": {
-                "scheme": "basic",
-                "in": "header"
-            },
-            "nosec_sc": {
-                "scheme": "nosec"
-            }
-        },
-        "properties": {},
-        "actions": {},
-        "events": {}
-    }
-    
-    # Add goal as metadata
-    if erdt_model.goal:
-        wot_td["erdt:goal"] = erdt_model.goal
+    # Dictionary to hold all Thing Descriptions (one per entity)
+    thing_descriptions = {}
     
     # Track which attributes are writable based on interfaces
     writable_attributes = set()
     for interface in erdt_model.interfaces:
         if interface.interface_type == InterfaceType.UPDATE:
-            # Mark attributes that can be updated via this interface
             for param in interface.parameters:
                 writable_attributes.add(f"{interface.entity.name}_{param}")
     
-    # Transform entities and their attributes to properties
+    # Create a Thing Description for each entity
     for entity in erdt_model.entities:
+        # Initialize WoT Thing Description for this entity
+        wot_td = {
+            "@context": [
+                "https://www.w3.org/2019/wot/td/v1",
+                {
+                    "erdt": "https://erdt.example.org/",
+                    "iot": "http://iotschema.org/"
+                }
+            ],
+            "id": f"urn:uuid:{entity.name.lower()}",
+            "title": entity.name,
+            "description": entity.description or f"Digital Twin of {entity.name}",
+            "@type": "Thing",
+            "security": ["basic_sc"],
+            "securityDefinitions": {
+                "basic_sc": {
+                    "scheme": "basic",
+                    "in": "header"
+                },
+                "nosec_sc": {
+                    "scheme": "nosec"
+                }
+            },
+            "properties": {},
+            "actions": {},
+            "events": {},
+            "links": []
+        }
+        
+        # Add ERDT model goal as metadata
+        if erdt_model.goal:
+            wot_td["erdt:modelGoal"] = erdt_model.goal
+        
+        # Transform entity's attributes to properties
         for attribute in entity.attributes:
-            property_name = f"{entity.name}_{attribute.name}"
+            property_name = attribute.name
             wot_td["properties"][property_name] = _create_property_from_attribute(
                 entity.name,
                 attribute,
                 writable_attributes
             )
-    
-    # Transform interfaces to actions
-    for interface in erdt_model.interfaces:
-        # Query interfaces can be represented as readable properties (already done above)
-        # Update, Relationship, and Analytical interfaces become actions
-        if interface.interface_type in [InterfaceType.UPDATE, InterfaceType.RELATIONSHIP, InterfaceType.ANALYTICAL]:
-            action_name = f"{interface.entity.name}_{interface.name}"
-            wot_td["actions"][action_name] = _create_action_from_interface(interface)
-    
-    # Transform incoming events to actions (they can be invoked to update the DT)
-    for incoming_event in erdt_model.incoming_events:
-        action_name = f"trigger_{incoming_event.name}"
-        action_def = {
-            "description": incoming_event.description or f"Trigger incoming event: {incoming_event.name}",
-            "input": {
-                "type": "object",
-                "properties": {
-                    "value": {"type": "object"},
-                    "timestamp": {"type": "string", "format": "date-time"}
+        
+        # Transform interfaces that belong to this entity to actions
+        for interface in erdt_model.interfaces:
+            if interface.entity.name == entity.name:
+                if interface.interface_type in [InterfaceType.UPDATE, InterfaceType.RELATIONSHIP, InterfaceType.ANALYTICAL]:
+                    action_name = interface.name
+                    wot_td["actions"][action_name] = _create_action_from_interface(entity.name, interface)
+        
+        # Transform incoming events that target this entity's interfaces
+        for incoming_event in erdt_model.incoming_events:
+            if incoming_event.target_interface.entity.name == entity.name:
+                action_name = f"trigger_{incoming_event.name}"
+                action_def = {
+                    "description": incoming_event.description or f"Trigger incoming event: {incoming_event.name}",
+                    "input": {
+                        "type": "object",
+                        "properties": {
+                            "value": {"type": "object"},
+                            "timestamp": {"type": "string", "format": "date-time"}
+                        }
+                    }
                 }
-            }
-        }
+                
+                if incoming_event.event_source:
+                    action_def["erdt:eventSource"] = incoming_event.event_source
+                
+                # Add required forms field
+                action_def["forms"] = [{
+                    "href": f"https://example.com/things/{entity.name}/actions/trigger_{incoming_event.name}",
+                    "contentType": "application/json",
+                    "op": "invokeaction"
+                }]
+                
+                wot_td["actions"][action_name] = action_def
         
-        if incoming_event.event_source:
-            action_def["erdt:eventSource"] = incoming_event.event_source
+        # Transform outgoing events that originate from this entity's interfaces
+        for outgoing_event in erdt_model.outgoing_events:
+            if outgoing_event.source_interface.entity.name == entity.name:
+                event_name = outgoing_event.name
+                wot_td["events"][event_name] = _create_event_from_outgoing_event(entity.name, outgoing_event)
         
-        # Add required forms field
-        action_def["forms"] = [{
-            "href": f"https://example.com/things/dt/actions/trigger_{incoming_event.name}",
-            "contentType": "application/json",
-            "op": "invokeaction"
-        }]
+        # Add relationships as links to other Things
+        for relationship in erdt_model.relationships:
+            if entity in relationship.entities:
+                # Find the other entity/entities in this relationship
+                other_entities = [e for e in relationship.entities if e.name != entity.name]
+                for other_entity in other_entities:
+                    wot_td["links"].append({
+                        "rel": relationship.name,
+                        "href": f"https://example.com/things/{other_entity.name}",
+                        "type": "application/td+json",
+                        "erdt:relationshipDescription": relationship.description
+                    })
         
-        wot_td["actions"][action_name] = action_def
+        # Store this entity's Thing Description
+        thing_descriptions[entity.name] = wot_td
     
-    # Transform outgoing events to WoT events
-    for outgoing_event in erdt_model.outgoing_events:
-        event_name = outgoing_event.name
-        wot_td["events"][event_name] = _create_event_from_outgoing_event(outgoing_event)
-    
-    # Add relationships as metadata
-    if erdt_model.relationships:
-        wot_td["erdt:relationships"] = [
-            {
-                "name": rel.name,
-                "entities": [e.name for e in rel.entities],
-                "description": rel.description
-            }
-            for rel in erdt_model.relationships
-        ]
-    
-    return wot_td
+    return thing_descriptions

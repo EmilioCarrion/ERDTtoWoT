@@ -127,33 +127,74 @@ class TestLogisticsWoTTransformation:
     """Tests for WoT transformation of logistics model."""
     
     def test_transformation_produces_dict(self, logistics_model):
-        """Test that transformation returns a dictionary."""
-        wot_td = transform_erdt_to_wot(logistics_model)
-        assert isinstance(wot_td, dict)
+        """Test that transformation returns a dictionary of TDs (one per entity)."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
+        assert isinstance(wot_tds, dict)
+        
+        # Should have one TD per entity
+        assert len(wot_tds) == 4  # Hive, Picker, Truck, Driver
+        assert "Hive" in wot_tds
+        assert "Picker" in wot_tds
+        assert "Truck" in wot_tds
+        assert "Driver" in wot_tds
     
     def test_wot_validation(self, logistics_model):
-        """Test that transformed WoT TD is valid (or identifies what's missing)."""
-        wot_td = transform_erdt_to_wot(logistics_model)
-        is_valid, messages = validate_wot_thing_description(wot_td)
+        """Test that each transformed WoT TD is valid."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
         
-        # Print validation results for debugging
-        if not is_valid:
-            print("\nWoT validation messages:")
-            for msg in messages:
-                print(f"  {msg}")
-        
-        # The placeholder should produce a valid basic structure
-        # (though it may have warnings about being incomplete)
-        assert "@context" in wot_td
-        assert "title" in wot_td
-        assert "security" in wot_td
-        assert "securityDefinitions" in wot_td
+        # Validate each entity's TD
+        for entity_name, wot_td in wot_tds.items():
+            is_valid, messages = validate_wot_thing_description(wot_td)
+            
+            # Print validation results for debugging
+            if not is_valid:
+                print(f"\nWoT validation messages for {entity_name}:")
+                for msg in messages:
+                    print(f"  {msg}")
+            
+            # Each TD should have required fields
+            assert "@context" in wot_td
+            assert "title" in wot_td
+            assert wot_td["title"] == entity_name
+            assert "security" in wot_td
+            assert "securityDefinitions" in wot_td
     
     def test_wot_has_required_sections(self, logistics_model):
-        """Test that WoT TD has properties, actions, and events sections."""
-        wot_td = transform_erdt_to_wot(logistics_model)
+        """Test that each WoT TD has properties, actions, and events sections."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
         
-        # These should exist even if empty
-        assert "properties" in wot_td
-        assert "actions" in wot_td
-        assert "events" in wot_td
+        for entity_name, wot_td in wot_tds.items():
+            # These should exist even if empty
+            assert "properties" in wot_td
+            assert "actions" in wot_td
+            assert "events" in wot_td
+            assert "links" in wot_td
+    
+    def test_picker_td_has_indoor_location(self, logistics_model):
+        """Test that Picker TD has indoor_location property."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
+        picker_td = wot_tds["Picker"]
+        
+        assert "indoor_location" in picker_td["properties"]
+        assert picker_td["properties"]["indoor_location"]["observable"] == True
+    
+    def test_truck_td_has_lez_event(self, logistics_model):
+        """Test that Truck TD has LEZ alert event."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
+        truck_td = wot_tds["Truck"]
+        
+        # Truck should have the LEZ alert event
+        assert len(truck_td["events"]) >= 1
+        assert "truck_entered_lez" in truck_td["events"]
+    
+    def test_relationships_as_links(self, logistics_model):
+        """Test that relationships are represented as links between TDs."""
+        wot_tds = transform_erdt_to_wot(logistics_model)
+        
+        # Picker should have link to Hive (works_in relationship)
+        picker_td = wot_tds["Picker"]
+        assert len(picker_td["links"]) > 0
+        
+        # Check if there's a link to Hive
+        has_hive_link = any("Hive" in link["href"] for link in picker_td["links"])
+        assert has_hive_link
