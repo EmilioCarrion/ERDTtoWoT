@@ -89,6 +89,14 @@ def _create_property_from_attribute(
     else:
         property_def["readOnly"] = property_def.get("readOnly", True)
     
+    # Add required forms field with HTTP binding
+    property_name = f"{entity_name}_{attribute.name}"
+    property_def["forms"] = [{
+        "href": f"https://example.com/things/dt/{property_name}",
+        "contentType": "application/json",
+        "op": ["readproperty", "writeproperty"] if not property_def.get("readOnly", True) else ["readproperty"]
+    }]
+    
     return property_def
 
 
@@ -129,6 +137,13 @@ def _create_action_from_interface(interface: Interface) -> Dict[str, Any]:
     if interface.security_constraints:
         action_def["security"] = interface.security_constraints
     
+    # Add required forms field
+    action_def["forms"] = [{
+        "href": f"https://example.com/things/dt/actions/{interface.name}",
+        "contentType": "application/json",
+        "op": "invokeaction"
+    }]
+    
     return action_def
 
 
@@ -165,17 +180,19 @@ def _create_event_from_outgoing_event(outgoing_event: OutgoingEvent) -> Dict[str
         }
     }
     
+    # Add required forms field with SSE (Server-Sent Events) binding
+    event_def["forms"] = [{
+        "href": f"https://example.com/things/dt/events/{outgoing_event.name}",
+        "contentType": "application/json",
+        "subprotocol": "sse",
+        "op": "subscribeevent"
+    }]
+    
     return event_def
 
 
 def transform_erdt_to_wot(erdt_model: ERDTModel) -> Dict[str, Any]:
     """
-    Transform an ERDT model to a WoT Thing Description.
-    
-    This transformation maps:
-    - ERDT Entities + Attributes -> WoT Properties
-    - ERDT Historical Attributes -> WoT Properties (observable)
-    - ERDT Derived Attributes -> WoT Properties (readOnly)
     - ERDT Interfaces (Query) -> WoT Properties (readable)
     - ERDT Interfaces (Update/Analytical) -> WoT Actions
     - ERDT Incoming Events -> WoT Actions (invokable to trigger updates)
@@ -261,6 +278,13 @@ def transform_erdt_to_wot(erdt_model: ERDTModel) -> Dict[str, Any]:
         
         if incoming_event.event_source:
             action_def["erdt:eventSource"] = incoming_event.event_source
+        
+        # Add required forms field
+        action_def["forms"] = [{
+            "href": f"https://example.com/things/dt/actions/trigger_{incoming_event.name}",
+            "contentType": "application/json",
+            "op": "invokeaction"
+        }]
         
         wot_td["actions"][action_name] = action_def
     

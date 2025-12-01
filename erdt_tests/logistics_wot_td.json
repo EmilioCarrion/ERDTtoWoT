@@ -25,33 +25,88 @@
     "Hive_name": {
       "type": "string",
       "description": "Name of the warehouse",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Hive_name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Hive_blueprint": {
       "type": "object",
       "description": "Visual layout of the warehouse",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Hive_blueprint",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Picker_id": {
       "type": "string",
       "description": "Unique identifier",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Picker_id",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Picker_name": {
       "type": "string",
       "description": "Worker name",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Picker_name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Picker_indoor_location": {
       "type": "object",
       "description": "Position within warehouse over time (time-series data)",
       "observable": true,
-      "readOnly": false
+      "readOnly": false,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Picker_indoor_location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty",
+            "writeproperty"
+          ]
+        }
+      ]
     },
     "Truck_license_plate": {
       "type": "string",
       "description": "Vehicle registration",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Truck_license_plate",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Truck_location": {
       "type": "object",
@@ -65,17 +120,45 @@
       },
       "description": "GPS coordinates over time (time-series data)",
       "observable": true,
-      "readOnly": false
+      "readOnly": false,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Truck_location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty",
+            "writeproperty"
+          ]
+        }
+      ]
     },
     "Driver_driver_license": {
       "type": "string",
       "description": "Driver's license number",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Driver_driver_license",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Driver_name": {
       "type": "string",
       "description": "Driver name",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Driver_name",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     },
     "Driver_location": {
       "type": "object",
@@ -88,7 +171,16 @@
         }
       },
       "description": "Current location derived from driven truck [Computed: Location of the truck currently driven by this driver]",
-      "readOnly": true
+      "readOnly": true,
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/Driver_location",
+          "contentType": "application/json",
+          "op": [
+            "readproperty"
+          ]
+        }
+      ]
     }
   },
   "actions": {
@@ -107,6 +199,13 @@
       },
       "security": [
         "Requires telemetry system authentication"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/set_location",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
       ]
     },
     "Truck_set_location": {
@@ -124,6 +223,13 @@
       },
       "security": [
         "Requires GPS system authentication"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/set_location",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
       ]
     },
     "Truck_assign_driver": {
@@ -141,6 +247,13 @@
       },
       "security": [
         "Requires fleet management authorization"
+      ],
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/assign_driver",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
       ]
     },
     "trigger_picker_telemetry": {
@@ -157,7 +270,14 @@
           }
         }
       },
-      "erdt:eventSource": "Indoor positioning system worn by picker"
+      "erdt:eventSource": "Indoor positioning system worn by picker",
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/trigger_picker_telemetry",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
     },
     "trigger_driver_assigned": {
       "description": "Assigns driver to truck when shift starts",
@@ -173,7 +293,14 @@
           }
         }
       },
-      "erdt:eventSource": "Fleet management system"
+      "erdt:eventSource": "Fleet management system",
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/trigger_driver_assigned",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
     },
     "trigger_truck_gps_coordinates": {
       "description": "Periodically fetches truck GPS coordinates",
@@ -189,7 +316,14 @@
           }
         }
       },
-      "erdt:eventSource": "Truck GPS device"
+      "erdt:eventSource": "Truck GPS device",
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/actions/trigger_truck_gps_coordinates",
+          "contentType": "application/json",
+          "op": "invokeaction"
+        }
+      ]
     }
   },
   "events": {
@@ -210,7 +344,15 @@
             "type": "object"
           }
         }
-      }
+      },
+      "forms": [
+        {
+          "href": "https://example.com/things/dt/events/truck_entered_lez",
+          "contentType": "application/json",
+          "subprotocol": "sse",
+          "op": "subscribeevent"
+        }
+      ]
     }
   },
   "erdt:goal": "Locate workers, alert on LEZ violations, and analyze daily routes",
