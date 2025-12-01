@@ -1,0 +1,243 @@
+{
+  "@context": [
+    "https://www.w3.org/2019/wot/td/v1",
+    {
+      "erdt": "https://erdt.example.org/",
+      "iot": "http://iotschema.org/"
+    }
+  ],
+  "title": "Logistics Digital Twin",
+  "description": "Digital twin for online grocery delivery logistics chain",
+  "@type": "Thing",
+  "security": [
+    "basic_sc"
+  ],
+  "securityDefinitions": {
+    "basic_sc": {
+      "scheme": "basic",
+      "in": "header"
+    },
+    "nosec_sc": {
+      "scheme": "nosec"
+    }
+  },
+  "properties": {
+    "Hive_name": {
+      "type": "string",
+      "description": "Name of the warehouse",
+      "readOnly": true
+    },
+    "Hive_blueprint": {
+      "type": "object",
+      "description": "Visual layout of the warehouse",
+      "readOnly": true
+    },
+    "Picker_id": {
+      "type": "string",
+      "description": "Unique identifier",
+      "readOnly": true
+    },
+    "Picker_name": {
+      "type": "string",
+      "description": "Worker name",
+      "readOnly": true
+    },
+    "Picker_indoor_location": {
+      "type": "object",
+      "description": "Position within warehouse over time (time-series data)",
+      "observable": true,
+      "readOnly": false
+    },
+    "Truck_license_plate": {
+      "type": "string",
+      "description": "Vehicle registration",
+      "readOnly": true
+    },
+    "Truck_location": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      },
+      "description": "GPS coordinates over time (time-series data)",
+      "observable": true,
+      "readOnly": false
+    },
+    "Driver_driver_license": {
+      "type": "string",
+      "description": "Driver's license number",
+      "readOnly": true
+    },
+    "Driver_name": {
+      "type": "string",
+      "description": "Driver name",
+      "readOnly": true
+    },
+    "Driver_location": {
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      },
+      "description": "Current location derived from driven truck [Computed: Location of the truck currently driven by this driver]",
+      "readOnly": true
+    }
+  },
+  "actions": {
+    "Picker_set_location": {
+      "description": "Updates the indoor location of the picker",
+      "input": {
+        "type": "object",
+        "properties": {
+          "indoor_location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "indoor_location"
+        ]
+      },
+      "security": [
+        "Requires telemetry system authentication"
+      ]
+    },
+    "Truck_set_location": {
+      "description": "Updates the GPS location of the truck",
+      "input": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      },
+      "security": [
+        "Requires GPS system authentication"
+      ]
+    },
+    "Truck_assign_driver": {
+      "description": "Assigns a driver to this truck",
+      "input": {
+        "type": "object",
+        "properties": {
+          "driver": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "driver"
+        ]
+      },
+      "security": [
+        "Requires fleet management authorization"
+      ]
+    },
+    "trigger_picker_telemetry": {
+      "description": "Updates picker's indoor location from telemetry system",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Indoor positioning system worn by picker"
+    },
+    "trigger_driver_assigned": {
+      "description": "Assigns driver to truck when shift starts",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Fleet management system"
+    },
+    "trigger_truck_gps_coordinates": {
+      "description": "Periodically fetches truck GPS coordinates",
+      "input": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "erdt:eventSource": "Truck GPS device"
+    }
+  },
+  "events": {
+    "truck_entered_lez": {
+      "description": "Alerts operations team when truck enters restricted low-emission zone (Triggered when: Truck location enters predefined LEZ boundary)",
+      "target": "Operations management dashboard",
+      "data": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "erdt:goal": "Locate workers, alert on LEZ violations, and analyze daily routes",
+  "erdt:relationships": [
+    {
+      "name": "works_in",
+      "entities": [
+        "Picker",
+        "Hive"
+      ],
+      "description": "Picker works in a specific hive"
+    },
+    {
+      "name": "delivers_from",
+      "entities": [
+        "Truck",
+        "Hive"
+      ],
+      "description": "Truck delivers orders from a specific hive"
+    },
+    {
+      "name": "driven_by",
+      "entities": [
+        "Truck",
+        "Driver"
+      ],
+      "description": "Truck is driven by a specific driver"
+    }
+  ]
+}
