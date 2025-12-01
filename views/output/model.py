@@ -45,23 +45,17 @@ class Truck:
 
     @classmethod
     def from_ditto(cls, ditto_entity) -> "Truck":
-        return cls(
+        return Truck(
             thing_id=ditto_entity["thingId"],
             location=Coordinate(
-                latitude=ditto_entity["attributes"]["Location"]["latitude"],
-                longitude=ditto_entity["attributes"]["Location"]["longitude"],
+                latitude=ditto_entity["thingId"]["attributes"]["Location"]["latitude"],
+                longitude=ditto_entity["thingId"]["attributes"]["Location"]["latitude"],
             ),
-            license_plate=String(value=ditto_entity["attributes"]["License Plate"]),
+            license_plate=ditto_entity["thingId"]["attributes"]["License Plate"],
         )
 
     def get_location(self):
-        """
-        Implement this method to handle the Get Location interface.
-        """
         return self.location
 
     def get_license_plate(self):
-        """
-        Implement this method to handle the Get License Plate interface.
-        """
         return self.license_plate
